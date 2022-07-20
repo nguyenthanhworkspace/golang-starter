@@ -3,22 +3,23 @@ package app
 
 import (
 	"fmt"
+	"github.com/nguyenthanhworkspace/golang-starter/pkg/mysql"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/evrone/go-clean-template/config"
-	amqprpc "github.com/evrone/go-clean-template/internal/controller/amqp_rpc"
-	v1 "github.com/evrone/go-clean-template/internal/controller/http/v1"
-	"github.com/evrone/go-clean-template/internal/usecase"
-	"github.com/evrone/go-clean-template/internal/usecase/repo"
-	"github.com/evrone/go-clean-template/internal/usecase/webapi"
-	"github.com/evrone/go-clean-template/pkg/httpserver"
-	"github.com/evrone/go-clean-template/pkg/logger"
-	"github.com/evrone/go-clean-template/pkg/postgres"
-	"github.com/evrone/go-clean-template/pkg/rabbitmq/rmq_rpc/server"
+	"github.com/nguyenthanhworkspace/golang-starter/config"
+	amqprpc "github.com/nguyenthanhworkspace/golang-starter/internal/controller/amqp_rpc"
+	v1 "github.com/nguyenthanhworkspace/golang-starter/internal/controller/http/v1"
+	"github.com/nguyenthanhworkspace/golang-starter/internal/usecase"
+	"github.com/nguyenthanhworkspace/golang-starter/internal/usecase/repo"
+	"github.com/nguyenthanhworkspace/golang-starter/internal/usecase/webapi"
+	"github.com/nguyenthanhworkspace/golang-starter/pkg/httpserver"
+	"github.com/nguyenthanhworkspace/golang-starter/pkg/logger"
+	"github.com/nguyenthanhworkspace/golang-starter/pkg/postgres"
+	"github.com/nguyenthanhworkspace/golang-starter/pkg/rabbitmq/rmq_rpc/server"
 )
 
 // Run creates objects via constructors.
@@ -31,11 +32,19 @@ func Run(cfg *config.Config) {
 		l.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
 	}
 	defer pg.Close()
+	dbSql, err := mysql.New(cfg.MYSQL.URL)
+	if err != nil {
+		l.Fatal(fmt.Errorf("app - Run - mysql.New: %w", err))
+	}
+	defer dbSql.Close()
 
 	// Use case
 	translationUseCase := usecase.New(
 		repo.New(pg),
 		webapi.New(),
+	)
+	userUseCase := usecase.NewUserUseCase(
+		repo.NewUserRepo(dbSql),
 	)
 
 	// RabbitMQ RPC Server
@@ -48,7 +57,8 @@ func Run(cfg *config.Config) {
 
 	// HTTP Server
 	handler := gin.New()
-	v1.NewRouter(handler, l, translationUseCase)
+	useCaseList := v1.NewUseCaseList(translationUseCase, userUseCase)
+	v1.NewRouter(handler, l, useCaseList)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal

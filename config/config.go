@@ -9,11 +9,12 @@ import (
 type (
 	// Config -.
 	Config struct {
-		App  `yaml:"app"`
-		HTTP `yaml:"http"`
-		Log  `yaml:"logger"`
-		PG   `yaml:"postgres"`
-		RMQ  `yaml:"rabbitmq"`
+		App   `yaml:"app"`
+		HTTP  `yaml:"http"`
+		Log   `yaml:"logger"`
+		PG    `yaml:"postgres"`
+		MYSQL `yaml:"mysql"`
+		RMQ   `yaml:"rabbitmq"`
 	}
 
 	// App -.
@@ -36,6 +37,11 @@ type (
 	PG struct {
 		PoolMax int    `env-required:"true" yaml:"pool_max" env:"PG_POOL_MAX"`
 		URL     string `env-required:"true"                 env:"PG_URL"`
+	}
+
+	// MYSQL -.
+	MYSQL struct {
+		URL string `env-required:"true"                 env:"MYSQL_URL"`
 	}
 
 	// RMQ -.

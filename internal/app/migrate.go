@@ -3,14 +3,16 @@
 package app
 
 import (
+	"database/sql"
 	"errors"
 	"log"
 	"os"
 	"time"
 
-	"github.com/golang-migrate/migrate/v4"
 	// migrate tools
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
@@ -20,13 +22,13 @@ const (
 )
 
 func init() {
-	databaseURL, ok := os.LookupEnv("PG_URL")
+	databaseURL, ok := os.LookupEnv("MYSQL_URL")
 	if !ok || len(databaseURL) == 0 {
 		log.Fatalf("migrate: environment variable not declared: PG_URL")
 	}
 
-	databaseURL += "?sslmode=disable"
-
+	databaseURL += "?multiStatements=true"
+	log.Printf("MYSQL_URL: %q", databaseURL)
 	var (
 		attempts = _defaultAttempts
 		err      error
@@ -34,12 +36,20 @@ func init() {
 	)
 
 	for attempts > 0 {
-		m, err = migrate.New("file://migrations", databaseURL)
+		db, _ := sql.Open("mysql", databaseURL)
+		driver, _ := mysql.WithInstance(db, &mysql.Config{})
+		m, err = migrate.NewWithDatabaseInstance(
+			"file://migrations",
+			"mysql",
+			driver,
+		)
+
 		if err == nil {
 			break
 		}
 
-		log.Printf("Migrate: postgres is trying to connect, attempts left: %d", attempts)
+		log.Printf("Errors: %q", err)
+		log.Printf("Migrate: MYSQL is trying to connect, attempts left: %d", attempts)
 		time.Sleep(_defaultTimeout)
 		attempts--
 	}

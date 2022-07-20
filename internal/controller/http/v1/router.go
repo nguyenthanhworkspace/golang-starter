@@ -9,11 +9,26 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
+	"github.com/nguyenthanhworkspace/golang-starter/internal/usecase"
+	"github.com/nguyenthanhworkspace/golang-starter/pkg/httpresponse"
+	"github.com/nguyenthanhworkspace/golang-starter/pkg/logger"
+
 	// Swagger docs.
-	_ "github.com/evrone/go-clean-template/docs"
-	"github.com/evrone/go-clean-template/internal/usecase"
-	"github.com/evrone/go-clean-template/pkg/logger"
+	_ "github.com/nguyenthanhworkspace/golang-starter/docs"
 )
+
+// UseCaseList =.
+type UseCaseList struct {
+	translation usecase.Translation
+	user        usecase.User
+}
+
+func NewUseCaseList(t usecase.Translation, u usecase.User) *UseCaseList {
+	return &UseCaseList{
+		translation: t,
+		user:        u,
+	}
+}
 
 // NewRouter -.
 // Swagger spec:
@@ -22,7 +37,7 @@ import (
 // @version     1.0
 // @host        localhost:8080
 // @BasePath    /v1
-func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Translation) {
+func NewRouter(handler *gin.Engine, l logger.Interface, uc *UseCaseList) {
 	// Options
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
@@ -32,7 +47,10 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Translation) {
 	handler.GET("/swagger/*any", swaggerHandler)
 
 	// K8s probe
-	handler.GET("/healthz", func(c *gin.Context) { c.Status(http.StatusOK) })
+	handler.GET("/healthz", func(c *gin.Context) {
+		res := httpresponse.BuildResponse(true, "Ping", nil)
+		c.JSON(http.StatusOK, res)
+	})
 
 	// Prometheus metrics
 	handler.GET("/metrics", gin.WrapH(promhttp.Handler()))
@@ -40,6 +58,7 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Translation) {
 	// Routers
 	h := handler.Group("/v1")
 	{
-		newTranslationRoutes(h, t, l)
+		newTranslationRoutes(h, uc.translation, l)
+		newUserRoutes(h, uc.user, l)
 	}
 }

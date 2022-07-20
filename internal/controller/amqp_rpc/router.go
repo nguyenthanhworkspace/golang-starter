@@ -1,8 +1,8 @@
 package amqprpc
 
 import (
-	"github.com/evrone/go-clean-template/internal/usecase"
-	"github.com/evrone/go-clean-template/pkg/rabbitmq/rmq_rpc/server"
+	"github.com/nguyenthanhworkspace/golang-starter/internal/usecase"
+	"github.com/nguyenthanhworkspace/golang-starter/pkg/rabbitmq/rmq_rpc/server"
 )
 
 // NewRouter -.

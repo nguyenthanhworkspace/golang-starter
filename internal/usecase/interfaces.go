@@ -4,7 +4,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/evrone/go-clean-template/internal/entity"
+	"github.com/nguyenthanhworkspace/golang-starter/internal/entity"
 )
 
 //go:generate mockgen -source=interfaces.go -destination=./mocks_test.go -package=usecase_test
@@ -25,5 +25,17 @@ type (
 	// TranslationWebAPI -.
 	TranslationWebAPI interface {
 		Translate(entity.Translation) (entity.Translation, error)
+	}
+)
+
+type (
+	// UserRepo -.
+	UserRepo interface {
+		Store(context.Context, entity.User) error
+		//GetUsers(context.Context) ([]entity.User, error)
+	}
+
+	User interface {
+		usersIndex(context.Context) ([]entity.User, error)
 	}
 )

@@ -15,6 +15,15 @@ definitions:
         example: text for translation
         type: string
     type: object
+  entity.User:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+    type: object
   v1.doTranslateRequest:
     properties:
       destination:
@@ -27,9 +36,9 @@ definitions:
         example: auto
         type: string
     required:
-      - destination
-      - original
-      - source
+    - destination
+    - original
+    - source
     type: object
   v1.historyResponse:
     properties:
@@ -44,6 +53,13 @@ definitions:
         example: message
         type: string
     type: object
+  v1.userIndexResponse:
+    properties:
+      userIndex:
+        items:
+          $ref: '#/definitions/entity.User'
+        type: array
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -54,18 +70,18 @@ paths:
   /translation/do-translate:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Translate a text
       operationId: do-translate
       parameters:
-        - description: Set up translation
-          in: body
-          name: request
-          required: true
-          schema:
-            $ref: '#/definitions/v1.doTranslateRequest'
+      - description: Set up translation
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.doTranslateRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -81,15 +97,15 @@ paths:
             $ref: '#/definitions/v1.response'
       summary: Translate
       tags:
-        - translation
+      - translation
   /translation/history:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Show all translation history
       operationId: history
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -101,5 +117,25 @@ paths:
             $ref: '#/definitions/v1.response'
       summary: Show history
       tags:
-        - translation
+      - translation
+  /users/index:
+    get:
+      consumes:
+      - application/json
+      description: Show all users
+      operationId: usersIndex
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.userIndexResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.response'
+      summary: Show user
+      tags:
+      - users
 swagger: "2.0"

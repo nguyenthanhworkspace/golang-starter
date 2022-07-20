@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/evrone/go-clean-template/internal/entity"
-	"github.com/evrone/go-clean-template/pkg/postgres"
+	"github.com/nguyenthanhworkspace/golang-starter/internal/entity"
+	"github.com/nguyenthanhworkspace/golang-starter/pkg/postgres"
 )
 
 const _defaultEntityCap = 64

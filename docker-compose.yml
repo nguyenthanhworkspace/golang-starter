@@ -12,6 +12,37 @@ services:
       POSTGRES_DB: 'postgres'
     ports:
       - 5432:5432
+    networks:
+      - app-network
+
+  mysql:
+    image: mariadb:10.4.17
+    container_name: mysql
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: golang-starter-mysql
+      MYSQL_ROOT_PASSWORD: root
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - mysql-data:/var/lib/mysql/
+    networks:
+      - app-network
+
+  #MYSQL access tool
+  adminer:
+    depends_on:
+      - mysql
+    image: adminer:4.8.0
+    container_name: mysql_ui
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - app-network
 
   rabbitmq:
     container_name: rabbitmq
@@ -19,28 +50,45 @@ services:
     ports:
       - 5672:5672
       - 15672:15672
+    networks:
+      - app-network
 
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: DockerfileLocal
     container_name: app
-    image: app
+    image: golang-clean-template
     environment:
       PG_URL: 'postgres://user:pass@postgres:5432/postgres'
+      MYSQL_URL: 'root:root@tcp(mysql:3306)/golang-starter-mysql'
+      MYSQL_FULL_URL: 'mysql://root:root@tcp(mysql:3306)/golang-starter-mysql'
       RMQ_URL: 'amqp://guest:guest@rabbitmq:5672/'
     ports:
-      - 8080:8080
+      - 80:8080
+    volumes:
+      - .:/app
     depends_on:
       - postgres
       - rabbitmq
+    networks:
+      - app-network
 
-  integration:
-    build:
-      context: .
-      dockerfile: integration-test/Dockerfile
-    container_name: integration
-    image: integration
-    depends_on:
-      - app
-
+#  integration:
+#    build:
+#      context: .
+#      dockerfile: integration-test/Dockerfile
+#    container_name: integration
+#    image: integration
+#    depends_on:
+#      - app
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+#Volumes
 volumes:
   pg-data:
+    driver: local
+  mysql-data:
+    driver: local
